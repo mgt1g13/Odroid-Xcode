@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		151088D41BA2009D0071AF52 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 151088D31BA2009D0071AF52 /* main.cpp */; };
+		151088E01BA200E20071AF52 /* MultiWiiManipulation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 151088DA1BA200E20071AF52 /* MultiWiiManipulation.cpp */; };
+		151088E11BA200E20071AF52 /* MultiWiiNetwork.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 151088DC1BA200E20071AF52 /* MultiWiiNetwork.cpp */; };
+		151088E21BA200E20071AF52 /* MultiWiiProtocol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 151088DE1BA200E20071AF52 /* MultiWiiProtocol.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +28,12 @@
 /* Begin PBXFileReference section */
 		151088D01BA2009D0071AF52 /* OdroidXcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = OdroidXcode; sourceTree = BUILT_PRODUCTS_DIR; };
 		151088D31BA2009D0071AF52 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		151088DA1BA200E20071AF52 /* MultiWiiManipulation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MultiWiiManipulation.cpp; path = OdroidXcode/MultiWiiManipulation.cpp; sourceTree = "<group>"; };
+		151088DB1BA200E20071AF52 /* MultiWiiManipulation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MultiWiiManipulation.h; path = OdroidXcode/MultiWiiManipulation.h; sourceTree = "<group>"; };
+		151088DC1BA200E20071AF52 /* MultiWiiNetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MultiWiiNetwork.cpp; path = OdroidXcode/MultiWiiNetwork.cpp; sourceTree = "<group>"; };
+		151088DD1BA200E20071AF52 /* MultiWiiNetwork.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MultiWiiNetwork.h; path = OdroidXcode/MultiWiiNetwork.h; sourceTree = "<group>"; };
+		151088DE1BA200E20071AF52 /* MultiWiiProtocol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = MultiWiiProtocol.cpp; path = OdroidXcode/MultiWiiProtocol.cpp; sourceTree = "<group>"; };
+		151088DF1BA200E20071AF52 /* MultiWiiProtocol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MultiWiiProtocol.h; path = OdroidXcode/MultiWiiProtocol.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -41,6 +50,12 @@
 		151088C71BA2009D0071AF52 = {
 			isa = PBXGroup;
 			children = (
+				151088DA1BA200E20071AF52 /* MultiWiiManipulation.cpp */,
+				151088DB1BA200E20071AF52 /* MultiWiiManipulation.h */,
+				151088DC1BA200E20071AF52 /* MultiWiiNetwork.cpp */,
+				151088DD1BA200E20071AF52 /* MultiWiiNetwork.h */,
+				151088DE1BA200E20071AF52 /* MultiWiiProtocol.cpp */,
+				151088DF1BA200E20071AF52 /* MultiWiiProtocol.h */,
 				151088D21BA2009D0071AF52 /* OdroidXcode */,
 				151088D11BA2009D0071AF52 /* Products */,
 			);
@@ -118,7 +133,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				151088E01BA200E20071AF52 /* MultiWiiManipulation.cpp in Sources */,
+				151088E11BA200E20071AF52 /* MultiWiiNetwork.cpp in Sources */,
 				151088D41BA2009D0071AF52 /* main.cpp in Sources */,
+				151088E21BA200E20071AF52 /* MultiWiiProtocol.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
