@@ -113,7 +113,7 @@ int multiwii_send_data(unsigned char opcode, unsigned char* data_frame, unsigned
 
     unsigned char *toSend = get_msp(opcode, data_frame, data_size);
     ///toSend[FRAME_SIZE(data_size)-1] = 85;
-    int res = write(fd, toSend, FRAME_SIZE(data_size));
+    int res = (int)write(fd, toSend, FRAME_SIZE(data_size));
     //tcdrain(fd);
     free(toSend);
     if(res < 0)

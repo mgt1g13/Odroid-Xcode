@@ -14,11 +14,8 @@
 #define RC_MODE 1
 
 
-#include <stdio.h>
 #include <termios.h>
 #include <fcntl.h>
-
-
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,7 +29,8 @@
 #include <pthread.h>
 #include <signal.h>
 #include <sys/ioctl.h>
-#include <linux/sockios.h>
+//#include <linux/sockios.h>
+
 
 int sockfd;
 int newsockfd;
@@ -109,7 +107,8 @@ char get_key()
 
     int charsToRead = 0;
 
-    ioctl(newsockfd, SIOCINQ, &charsToRead);
+//    ioctl(newsockfd, SIOCINQ, &charsToRead);
+    ioctl(newsockfd, FIONREAD, &charsToRead);
 
     if(charsToRead == 0)
         return '\0';
@@ -117,7 +116,7 @@ char get_key()
     char ret;
     int n;
 
-    n = recv(newsockfd,&ret,1,0);
+    n = (int)recv(newsockfd,&ret,1,0);
 
     if (n < 0)
     {
