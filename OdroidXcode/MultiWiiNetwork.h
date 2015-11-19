@@ -34,7 +34,7 @@ int multiwii_init_serial_port(void);
 
 //Send the given data frame using the serial connection.
 //Envia o quadro passado por parametro por porta serial.
-int multiwii_send_data(unsigned char opcode, unsigned char* data_frame, unsigned char data_size);
+int multiwii_send_data(unsigned char* data_frame, unsigned char data_size);
 
 //Receives data from the serial port. Expected size is the maximum number of bytes it is supposed to read
 //Recebe dados pela porta serial. Expected_size eh o numero maximo de bytes que devem ser lidos

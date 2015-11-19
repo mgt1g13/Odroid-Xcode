@@ -1,5 +1,6 @@
 #include "MultiWiiNetwork.h"
 #include "MultiWiiManipulation.h"
+#include "MultiWiiProtocol.h"
 
 #include <stdio.h>
 
@@ -27,22 +28,25 @@ imu_t multiwii_get_imu(void){
 
     //Send request for imu data
     //int success = ;
-    while(!multiwii_send_data(MSP_RAW_IMU, NULL, 0))
-    {
-        printf("Error on multiwii send!\n");
-       // exit(1);
-    }
-
+    
+    unsigned char msp_message[50];
+    do{
+        
+        get_msp(MSP_RAW_IMU, NULL, 0, msp_message);
+        
+    }while(!multiwii_send_data(msp_message, MULTIWII_FRAME_SIZE(0)));
+    
     int expected_receive_size = 24;
 
-    //printf("I am Here!\n");
+    
     received_frame_t received_frame = multiwii_get_data(expected_receive_size);
 
+    
+    
     //We are expecting 25 bytes of data (Multiwii sends a 0 before every frame)
     //TODO: Validation of received frame -> Checksum!!!!!
     if(received_frame.frame_size < (uint16_t)expected_receive_size){
-        printf("Error on receive !\n");
-        exit(0);
+        return multiwii_get_imu();
     }
 
 
@@ -69,20 +73,23 @@ imu_t multiwii_get_imu(void){
 //Obtem dados de controle
 control_t multiwii_get_control(void){
     //Makes the request for RC values
-    int success = multiwii_send_data(MSP_RC, NULL, 0);
-
-    if(!success){
-        printf("Error on multiwii send!\n");
-        exit(0);
-    }
+//    int success = multiwii_send_data(MSP_RC, NULL, 0);
+    
+    
+    unsigned char msp_message[50];
+    do{
+        
+        get_msp(MSP_RC, NULL, 0, msp_message);
+        
+    }while(!multiwii_send_data(msp_message, MULTIWII_FRAME_SIZE(0)));
 
 
     int expected_receive_size = 22;
     received_frame_t received_frame = multiwii_get_data(expected_receive_size); //23?
 
+    
     if(received_frame.frame_size < (uint16_t)expected_receive_size){
-        printf("Error on multiwii send!\n");
-        exit(0);
+        return multiwii_get_control();
     }
 
 
@@ -121,8 +128,15 @@ void multiwii_set_control(control_t control_data){
         sendBytes[i+1] = (serializedData[i/2]>>8) &(0xff);
 
     }
+    unsigned char msp_message[50];
+//    do{
+    
+    get_msp(MSP_SET_RAW_RC, sendBytes, 16, msp_message);
+        
+//    }while(!multiwii_send_data(msp_message, MULTIWII_FRAME_SIZE(0)));
 
-    multiwii_send_data(MSP_SET_RAW_RC, sendBytes, 16);
+
+    multiwii_send_data(msp_message, MULTIWII_FRAME_SIZE(16));
 
 }
 

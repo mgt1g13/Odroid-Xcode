@@ -11,13 +11,13 @@
 
 //Macro to calculate the frame size when having x bytes
 //Macro para calculo do tamanho do quadro quando enviamos x bytes
-#define MULTIWII_FRAME_SIZE(X) (x+6)
+#define MULTIWII_FRAME_SIZE(x) (x+6)
 
 
 
 //Generates a frame according to the MSP format. DATA SHOULD BE FREED
 //Gera um quadro no formato aceito pelo MSP. CHAMAR FREE SOBRE O RETORNO
-unsigned char * get_msp(unsigned char opcode, unsigned char* data, unsigned char n_bytes);
+void get_msp(unsigned char opcode, unsigned char* data, unsigned char n_bytes, unsigned char* msp_message);
 
 
 
