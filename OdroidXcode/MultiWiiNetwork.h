@@ -9,6 +9,7 @@
 #define MSP_RC 105
 #define MSP_SET_RAW_RC 200
 #define MSP_RAW_IMU 102
+#define MSP_ALTITUDE 109
 
 
 

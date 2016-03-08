@@ -8,6 +8,12 @@ uint16_t mount16(uint16_t a, uint16_t b){
     return (b<<8) + a;
 }
 
+int32_t mount32(uint16_t a, uint16_t b){
+
+    return (((int)b) << 16) + a;
+
+}
+
 int complemento2(int a){
     return (a > 32768? a-65536 : a);
 }
@@ -137,7 +143,81 @@ void multiwii_set_control(control_t control_data){
 
 
     multiwii_send_data(msp_message, MULTIWII_FRAME_SIZE(16));
+}
 
+altitude_t multiwii_get_altitude_data(void){
+    
+    
+    //Send request for imu data
+    //int success = ;
+    
+    unsigned char msp_message[50];
+    do{
+        
+        get_msp(MSP_ALTITUDE, NULL, 0, msp_message);
+        
+    }while(!multiwii_send_data(msp_message, MULTIWII_FRAME_SIZE(0)));
+    
+    int expected_receive_size = 12;
+    
+    
+    received_frame_t received_frame = multiwii_get_data(expected_receive_size);
+    
+    
+    
+    //We are expecting 25 bytes of data (Multiwii sends a 0 before every frame)
+    //TODO: Validation of received frame -> Checksum!!!!!
+    if(received_frame.frame_size < (uint16_t)expected_receive_size){
+        return multiwii_get_altitude_data();
+    }
+    
+    
+    //    int j;
+    //    int temp;
+    altitude_t ret;
+    
+    //Interpret the received frame
+    ret.est_alt = mount32(mount16(received_frame.received_frame[5], received_frame.received_frame[6]), mount16(received_frame.received_frame[7], received_frame.received_frame[8]));
+//    ret.acc_y = complemento2(mount16(received_frame.received_frame[7], received_frame.received_frame[8]));
+//    ret.acc_z = complemento2(mount16(received_frame.received_frame[9], received_frame.received_frame[10]));
+//    ret.gyro_x = complemento2(mount16(received_frame.received_frame[11], received_frame.received_frame[12]))/8;
+//    ret.gyro_y = complemento2(mount16(received_frame.received_frame[13], received_frame.received_frame[14]))/8;
+//    ret.gyro_z = complemento2(mount16(received_frame.received_frame[15], received_frame.received_frame[16]))/8;
+//    ret.mag_x = complemento2(mount16(received_frame.received_frame[17], received_frame.received_frame[18]))/3;
+//    ret.mag_y = complemento2(mount16(received_frame.received_frame[19], received_frame.received_frame[20]))/3;
+//    ret.mag_z = complemento2(mount16(received_frame.received_frame[21], received_frame.received_frame[22]))/3;
+    
+    return ret;
+    
+}
+
+
+motor_t multiwii_get_motor_data(void){
+
+    unsigned char msp_message[50];
+    
+    do{
+        get_msp(MSP_MOTOR, NULL, 0, msp_message);
+    }while(!multiwii_send_data(msp_message, MULTIWII_FRAME_SIZE(0)));
+    
+    int expected_receive_size = 22;
+    
+    received_frame_t received_frame = multiwii_get_data(expected_receive_size);
+    
+    
+    if(received_frame.frame_size < (uint16_t)expected_receive_size){
+        return multiwii_get_motor_data();
+    }
+    
+    
+    motor_t ret;
+    
+    ret.rear_right = mount16(received_frame.received_frame[5], received_frame.received_frame[6]);
+    ret.front_right = mount16(received_frame.received_frame[7], received_frame.received_frame[8]);
+    ret.rear_left  = mount16(received_frame.received_frame[9], received_frame.received_frame[10]);
+    ret.front_left = mount16(received_frame.received_frame[11], received_frame.received_frame[12]);
+    
+    return ret;
 }
 
 int multiwii_stop_manipulation(void){

@@ -4,14 +4,16 @@
 
 #include "MultiWiiManipulation.h"
 #include <stdio.h>
-//#include <windows.h>
 
-#define MAX_THROTTLE 1850
+#define MAX_THROTTLE 2000//1850
 #define MAX 2000
 #define MIN 1000
+#define NOMINAL 1500
 
 #define IMU_MODE 0
 #define RC_MODE 1
+
+#define TIME_SOBE_LENTAMENTE 5
 
 
 #include <termios.h>
@@ -29,7 +31,11 @@
 #include <pthread.h>
 #include <signal.h>
 #include <sys/ioctl.h>
-//#include <linux/sockios.h>
+#include <sys/time.h>
+
+void arm();
+void disarm();
+void programa_sobe_lentamente();
 
 
 int sockfd;
@@ -89,41 +95,41 @@ void set_mode(int want_key)
 
 char get_key()
 {
-//    int c = 0;
-//    struct timeval tv;
-//    fd_set fs;
-//    tv.tv_usec = tv.tv_sec = 0;
-//
-//    FD_ZERO(&fs);
-//    FD_SET(STDIN_FILENO, &fs);
-//    select(STDIN_FILENO + 1, &fs, 0, 0, &tv);
-//
-//    if (FD_ISSET(STDIN_FILENO, &fs))
-//    {
-//        c = getchar();
-//        set_mode(0);
-//    }
-//    return c;
+    int c = 0;
+    struct timeval tv;
+    fd_set fs;
+    tv.tv_usec = tv.tv_sec = 0;
 
-    int charsToRead = 0;
+    FD_ZERO(&fs);
+    FD_SET(STDIN_FILENO, &fs);
+    select(STDIN_FILENO + 1, &fs, 0, 0, &tv);
 
-//    ioctl(newsockfd, SIOCINQ, &charsToRead);
-    ioctl(newsockfd, FIONREAD, &charsToRead);
-
-    if(charsToRead == 0)
-        return '\0';
-
-    char ret;
-    int n;
-
-    n = (int)recv(newsockfd,&ret,1,0);
-
-    if (n < 0)
+    if (FD_ISSET(STDIN_FILENO, &fs))
     {
-        printf("Erro lendo do socket!\n");
-        exit(1);
+        c = getchar();
+        set_mode(0);
     }
-    return ret;
+    return c;
+
+//    int charsToRead = 0;
+//
+////    ioctl(newsockfd, SIOCINQ, &charsToRead);
+//    ioctl(newsockfd, FIONREAD, &charsToRead);
+//
+//    if(charsToRead == 0)
+//        return '\0';
+//
+//    char ret;
+//    int n;
+//
+//    n = (int)recv(newsockfd,&ret,1,0);
+//
+//    if (n < 0)
+//    {
+//        printf("Erro lendo do socket!\n");
+//        exit(1);
+//    }
+//    return ret;
 
 
 }
@@ -137,7 +143,7 @@ void closeEverything(int signal)
     send.roll = 1500;
     send.pitch = 1500;
     send.yaw = 1000;
-    send.aux1 = 1500;
+    send.aux1 = 1000;
     send.aux2 = 1500;
     send.aux3 = 1500;
     send.aux4 = 1500;
@@ -157,12 +163,30 @@ void closeEverything(int signal)
 
 int main(int argc, char **argv)
 {
-    if(argc < 2 )
-    {
-        printf("Uso ./leitor numero_porta\n");
-        exit(1);
-    }
-    port = atoi(argv[1]);
+    
+//    
+//    multiwii_init_manipulation();
+////    arm();
+////    printf("armed\n");
+////    sleep(1);
+////    while (true) {
+////        
+////        motor_t test = multiwii_get_motor_data();
+////        printf("Front_L: %d, Front_R: %d, Rear_L: %d, Rear_R: %d\n", test.front_left, test.front_right, test.rear_left, test.rear_right);
+////        
+////    }
+////    disarm();
+//    
+//    programa_sobe_lentamente();
+//    multiwii_stop_manipulation();
+    
+    
+//    if(argc < 2 )
+//    {
+//        printf("Uso ./leitor numero_porta\n");
+//        exit(1);
+//    }
+//    port = atoi(argv[1]);
 
     printf("\n -----------------------------------------------------\n\n");
     printf("\nPrograma para controle de quadcoptero Multiwii por porta Serial");
@@ -172,21 +196,25 @@ int main(int argc, char **argv)
     signal(SIGINT, closeEverything);
 
     //set_mode(1);
-    init_socket(argc, argv);
+//    init_socket(argc, argv);
     /********************/
     multiwii_init_manipulation();
     /********************/
+    
+
+
 
     int throttle = 1500;
     int pitch = 1500;
     int roll = 1500;
     int yaw = 1500;
+    int aux1 = NOMINAL;
 
 
-//    int i = 0;
+
     while(1)
     {
-        //set_mode(1);
+        set_mode(1);
         char c = get_key();
 
         switch(c)
@@ -215,23 +243,26 @@ int main(int argc, char **argv)
             case 'q':
             if(roll > MIN) roll -= 50;
             break;
+            case 'b': if(aux1 == NOMINAL) aux1 = MAX;
+            else  aux1 = NOMINAL;
+                break;
+                
 
         }
-//        gotoXY(0,10);
+
         control_t send;
-////
+        
         send.throttle = throttle;
         send.roll = roll;
         send.pitch = pitch;
         send.yaw = yaw;
-        send.aux1 = 1500;
-        send.aux2 = 1500;
+        send.aux1 = aux1;
+        send.aux2 = MAX;
         send.aux3 = 1500;
         send.aux4 = 1500;
-//
-//
+        
         multiwii_set_control(send);
-
+//
         control_t ctrl =
         multiwii_get_control();
 
@@ -239,26 +270,148 @@ int main(int argc, char **argv)
         printf("Pitch    -> %4d\t", ctrl.pitch);
         printf("Roll     -> %4d\t", ctrl.roll);
         printf("Yaw      -> %4d\t", ctrl.yaw);
-
+        printf("Aux1      -> %4d\t", ctrl.aux1);
         printf("\n");
-
-//        imu_t imu = multiwii_get_imu();
 //
-//        printf("Acc X    -> %4d ", imu.acc_x);
-//        printf("Acc y    -> %4d ", imu.acc_y);
-//        printf("Acc z    -> %4d ", imu.acc_z);
-//        printf("Gyr X    -> %4d ", imu.gyro_x);
-//        printf("Gyr Y    -> %4d ", imu.gyro_y);
-//        printf("Gyr Z    -> %4d ", imu.gyro_z);
-//        printf("Mag X    -> %4d ", imu.mag_x);
-//        printf("Mag Y    -> %4d ", imu.mag_y);
-//        printf("Mag Z    -> %4d ", imu.mag_z);
+//
+//        printf("Throttle -> %4d\t", send.throttle);
+//        printf("Pitch    -> %4d\t", send.pitch);
+//        printf("Roll     -> %4d\t", send.roll);
+//        printf("Yaw      -> %4d\t", send.yaw);
 //        printf("\n");
-
+//
+////        imu_t imu = multiwii_get_imu();
+////
+////        printf("Acc X    -> %4d ", imu.acc_x);
+////        printf("Acc y    -> %4d ", imu.acc_y);
+////        printf("Acc z    -> %4d ", imu.acc_z);
+////        printf("Gyr X    -> %4d ", imu.gyro_x);
+////        printf("Gyr Y    -> %4d ", imu.gyro_y);
+////        printf("Gyr Z    -> %4d ", imu.gyro_z);
+////        printf("Mag X    -> %4d ", imu.mag_x);
+////        printf("Mag Y    -> %4d ", imu.mag_y);
+////        printf("Mag Z    -> %4d ", imu.mag_z);
+////        printf("\n");
+        usleep(50000);
+//
     }
 
-
+    multiwii_stop_manipulation();
 
     return 0;
+}
+
+
+void arm(){
+    
+    printf("arming\n");
+    
+    control_t send;
+
+    send.throttle = MIN;
+    send.roll = NOMINAL;
+    send.pitch = NOMINAL;
+    send.yaw = NOMINAL;
+    send.aux1 = MAX;
+    send.aux2 = NOMINAL;
+    send.aux3 = NOMINAL;
+    send.aux4 = NOMINAL;
+    
+
+    timeval t;
+    timeval current_val;
+    gettimeofday(&t, NULL);
+    unsigned int start = t.tv_usec/1000;
+    
+    
+    gettimeofday(&current_val, NULL);
+    unsigned int end = current_val.tv_usec/1000;
+
+    
+    while (end-start < 1) {
+        multiwii_set_control(send);
+        gettimeofday(&current_val, NULL);
+        end = current_val.tv_usec/1000;
+        usleep(100000);
+    }
+}
+
+void disarm(){
+    
+    control_t send;
+    
+    send.throttle = MIN;
+    send.roll = NOMINAL;
+    send.pitch = NOMINAL;
+    send.yaw = NOMINAL;
+    send.aux1 = NOMINAL;
+    send.aux2 = NOMINAL;
+    send.aux3 = NOMINAL;
+    send.aux4 = NOMINAL;
+    
+    
+    timeval t;
+    timeval current_val;
+    gettimeofday(&t, NULL);
+    unsigned int start = t.tv_usec/1000;
+    
+    
+    gettimeofday(&current_val, NULL);
+    unsigned int end = current_val.tv_usec/1000;
+    
+
+    multiwii_set_control(send);
+
+    
+    
+    while (end-start < 10) {
+
+        multiwii_set_control(send);
+        
+        gettimeofday(&current_val, NULL);
+        end = current_val.tv_usec/1000;
+    }
+    
+}
+
+void programa_sobe_lentamente(){
+
+    arm();
+    
+    timeval t_inicio;
+    gettimeofday(&t_inicio, NULL);
+    timeval t_now;
+    gettimeofday(&t_now, NULL);
+    
+    
+    control_t send;
+    
+    send.throttle = 1550;
+    send.roll = NOMINAL;
+    send.pitch = NOMINAL;
+    send.yaw = NOMINAL;
+    send.aux1 = MAX;
+    send.aux2 = NOMINAL;
+    send.aux3 = NOMINAL;
+    send.aux4 = NOMINAL;
+
+    
+    while (t_now.tv_sec - t_inicio.tv_sec < TIME_SOBE_LENTAMENTE) {
+        printf("%ld\n", t_now.tv_sec - t_inicio.tv_sec);
+        multiwii_set_control(send);
+        gettimeofday(&t_now, NULL);
+        
+        usleep(100000);
+        control_t ctrl =
+        multiwii_get_control();
+        
+        printf("Throttle -> %4d\t", ctrl.throttle);
+        printf("Pitch    -> %4d\t", ctrl.pitch);
+        printf("Roll     -> %4d\t", ctrl.roll);
+        printf("Yaw      -> %4d\t", ctrl.yaw);
+        printf("Aux1      -> %4d\t", ctrl.aux1);
+        printf("\n");
+    }
+    disarm();
 }
 

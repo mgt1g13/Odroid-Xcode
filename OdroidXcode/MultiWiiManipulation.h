@@ -34,6 +34,27 @@ typedef struct {
 } control_t;
 
 
+typedef struct {
+    
+    int32_t est_alt;
+    int16_t vario;
+    
+} altitude_t;
+
+
+
+//If quad
+typedef struct{
+    
+    uint16_t front_right;
+    uint16_t front_left;
+    uint16_t rear_right;
+    uint16_t rear_left;
+    
+} motor_t;
+
+
+
 //Initialises the MultiWii manipulation. SHOULD ALWAYS BE CALLED BEFORE CALLING ANY OF THE OTHER FUNCTIONS
 //Inicializa a manipulacao do MultiWii. DEVE SER CHAMADA ANTES DE CHAMAR QUALQUER OUTRA FUNCAO
 int multiwii_init_manipulation(void);
@@ -48,6 +69,13 @@ control_t multiwii_get_control(void);
 
 //Set control data on the FC
 void multiwii_set_control(control_t control_data);
+
+//Get altitude data
+//Obtém informações de altitude
+altitude_t multiwii_get_altitude_data(void);
+
+
+motor_t multiwii_get_motor_data(void);
 
 int multiwii_stop_manipulation(void);
 

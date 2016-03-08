@@ -131,7 +131,7 @@ received_frame_t multiwii_get_data(int expected_size)
     if( (int) received_frame.frame_size < expected_size )
     {
         printf("Error on read! %s - %d %d\n", strerror(errno), (int)received_frame.frame_size, (int)expected_size);
-        exit(1);
+//        exit(1);
     }
     
     return received_frame;
