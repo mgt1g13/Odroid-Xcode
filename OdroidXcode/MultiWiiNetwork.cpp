@@ -83,7 +83,7 @@ void initPort()
     options.c_cflag |= CS8;
     
     
-    options.c_cc[VTIME] = 0;  // timeout after .1s that isn't working
+    options.c_cc[VTIME] = 0.1;  // timeout after .1s that isn't working
     options.c_cc[VMIN] = 1;
     
     
@@ -131,6 +131,7 @@ received_frame_t multiwii_get_data(int expected_size)
     if( (int) received_frame.frame_size < expected_size )
     {
         printf("Error on read! %s - %d %d\n", strerror(errno), (int)received_frame.frame_size, (int)expected_size);
+        tcflush(fd, TCIFLUSH);
 //        exit(1);
     }
     

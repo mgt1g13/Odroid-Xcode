@@ -33,6 +33,8 @@
 #include <sys/ioctl.h>
 #include <sys/time.h>
 
+#include <pthread.h>
+
 void arm();
 void disarm();
 void programa_sobe_lentamente();
@@ -95,43 +97,68 @@ void set_mode(int want_key)
 
 char get_key()
 {
-    int c = 0;
-    struct timeval tv;
-    fd_set fs;
-    tv.tv_usec = tv.tv_sec = 0;
-
-    FD_ZERO(&fs);
-    FD_SET(STDIN_FILENO, &fs);
-    select(STDIN_FILENO + 1, &fs, 0, 0, &tv);
-
-    if (FD_ISSET(STDIN_FILENO, &fs))
-    {
-        c = getchar();
-        set_mode(0);
-    }
-    return c;
-
-//    int charsToRead = 0;
+//    int c = 0;
+//    struct timeval tv;
+//    fd_set fs;
+//    tv.tv_usec = tv.tv_sec = 0;
 //
-////    ioctl(newsockfd, SIOCINQ, &charsToRead);
-//    ioctl(newsockfd, FIONREAD, &charsToRead);
+//    FD_ZERO(&fs);
+//    FD_SET(STDIN_FILENO, &fs);
+//    select(STDIN_FILENO + 1, &fs, 0, 0, &tv);
 //
-//    if(charsToRead == 0)
-//        return '\0';
-//
-//    char ret;
-//    int n;
-//
-//    n = (int)recv(newsockfd,&ret,1,0);
-//
-//    if (n < 0)
+//    if (FD_ISSET(STDIN_FILENO, &fs))
 //    {
-//        printf("Erro lendo do socket!\n");
-//        exit(1);
+//        c = getchar();
+//        set_mode(0);
 //    }
-//    return ret;
+//    return c;
+
+    int charsToRead = 0;
+
+    ioctl(newsockfd, FIONREAD, &charsToRead);
+
+    if(charsToRead == 0)
+        return '\0';
+
+    char ret;
+    int n;
+
+    n = (int)recv(newsockfd,&ret,1,0);
+    
+    printf("%d\n", ret);
+    if (n < 0)
+    {
+        printf("Erro lendo do socket!\n");
+        exit(1);
+    }
+    return ret;
+
+}
 
 
+int read_int(){
+    
+    int ret;
+    int n;
+    
+    int charsToRead = 0;
+    
+    while (charsToRead < sizeof(int)) {
+        ioctl(newsockfd, FIONREAD, &charsToRead);
+    }
+    
+    n = (int)recv(newsockfd,&ret,sizeof(ret),0);
+    
+    printf("%d\n", ret);
+    
+    if (n < 0)
+    {
+        printf("Erro lendo do socket!\n");
+        exit(1);
+    }
+    return ret;
+   
+    
 }
 
 void closeEverything(int signal)
@@ -163,23 +190,7 @@ void closeEverything(int signal)
 
 int main(int argc, char **argv)
 {
-    
-//    
-//    multiwii_init_manipulation();
-////    arm();
-////    printf("armed\n");
-////    sleep(1);
-////    while (true) {
-////        
-////        motor_t test = multiwii_get_motor_data();
-////        printf("Front_L: %d, Front_R: %d, Rear_L: %d, Rear_R: %d\n", test.front_left, test.front_right, test.rear_left, test.rear_right);
-////        
-////    }
-////    disarm();
-//    
-//    programa_sobe_lentamente();
-//    multiwii_stop_manipulation();
-    
+
     
 //    if(argc < 2 )
 //    {
@@ -187,6 +198,7 @@ int main(int argc, char **argv)
 //        exit(1);
 //    }
 //    port = atoi(argv[1]);
+    port = 5000;
 
     printf("\n -----------------------------------------------------\n\n");
     printf("\nPrograma para controle de quadcoptero Multiwii por porta Serial");
@@ -196,7 +208,7 @@ int main(int argc, char **argv)
     signal(SIGINT, closeEverything);
 
     //set_mode(1);
-//    init_socket(argc, argv);
+    init_socket(argc, argv);
     /********************/
     multiwii_init_manipulation();
     /********************/
@@ -210,68 +222,87 @@ int main(int argc, char **argv)
     int yaw = 1500;
     int aux1 = NOMINAL;
 
-
+    control_t send;
+    send.throttle = 1500;
+    send.pitch = 1500;
+    send.roll = 1500;
+    send.yaw = 1500;
+    send.aux1 = 1500;
+    send.aux2 = 1500;
+    send.aux3 = 1500;
+    send.aux4 = 1500;
 
     while(1)
     {
-        set_mode(1);
-        char c = get_key();
+//        set_mode(1);
+//        char c = get_key();
+//
+//        switch(c)
+//        {
+//            case 'o':
+//            if(throttle < MAX_THROTTLE) throttle += 50;
+//            break;
+//            case 'l':
+//            if(throttle > MIN) throttle -= 50;
+//            break;
+//            case 'w':
+//            if(pitch < MAX) pitch += 50;
+//            break;
+//            case 's':
+//            if(pitch > MIN) pitch -= 50;
+//            break;
+//            case 'd':
+//            if(yaw < MAX) yaw += 50;
+//            break;
+//            case 'a':
+//            if(yaw > MIN) yaw -= 50;
+//            break;
+//            case 'e':
+//            if(roll < MAX) roll += 50;
+//            break;
+//            case 'q':
+//            if(roll > MIN) roll -= 50;
+//            break;
+//            case 'b': if(aux1 == NOMINAL) aux1 = MAX;
+//            else  aux1 = NOMINAL;
+//                break;
+//                
+//
+//        }
 
-        switch(c)
-        {
-            case 'o':
-            if(throttle < MAX_THROTTLE) throttle += 50;
-            break;
-            case 'l':
-            if(throttle > MIN) throttle -= 50;
-            break;
-            case 'w':
-            if(pitch < MAX) pitch += 50;
-            break;
-            case 's':
-            if(pitch > MIN) pitch -= 50;
-            break;
-            case 'd':
-            if(yaw < MAX) yaw += 50;
-            break;
-            case 'a':
-            if(yaw > MIN) yaw -= 50;
-            break;
-            case 'e':
-            if(roll < MAX) roll += 50;
-            break;
-            case 'q':
-            if(roll > MIN) roll -= 50;
-            break;
-            case 'b': if(aux1 == NOMINAL) aux1 = MAX;
-            else  aux1 = NOMINAL;
-                break;
-                
 
-        }
-
-        control_t send;
         
-        send.throttle = throttle;
-        send.roll = roll;
-        send.pitch = pitch;
-        send.yaw = yaw;
-        send.aux1 = aux1;
-        send.aux2 = MAX;
-        send.aux3 = 1500;
-        send.aux4 = 1500;
+        send.pitch = read_int();
+        send.roll = read_int();
+        send.yaw = read_int();
+        send.throttle = read_int();
+        send.aux1 = read_int();
+        send.aux2 = read_int();
+        send.aux3 = read_int();
+        send.aux4 = read_int();
         
+        
+//        
+//        send.throttle = throttle;
+//        send.roll = roll;
+//        send.pitch = pitch;
+//        send.yaw = yaw;
+//        send.aux1 = aux1;
+//        send.aux2 = MAX;
+//        send.aux3 = 1500;
+//        send.aux4 = 1500;
+//        
         multiwii_set_control(send);
 //
-        control_t ctrl =
-        multiwii_get_control();
-
-        printf("Throttle -> %4d\t", ctrl.throttle);
-        printf("Pitch    -> %4d\t", ctrl.pitch);
-        printf("Roll     -> %4d\t", ctrl.roll);
-        printf("Yaw      -> %4d\t", ctrl.yaw);
-        printf("Aux1      -> %4d\t", ctrl.aux1);
-        printf("\n");
+//        control_t ctrl =
+//        multiwii_get_control();
+//
+//        printf("Throttle -> %4d\t", ctrl.throttle);
+//        printf("Pitch    -> %4d\t", ctrl.pitch);
+//        printf("Roll     -> %4d\t", ctrl.roll);
+//        printf("Yaw      -> %4d\t", ctrl.yaw);
+//        printf("Aux1      -> %4d\t", ctrl.aux1);
+//        printf("\n");
 //
 //
 //        printf("Throttle -> %4d\t", send.throttle);
@@ -292,7 +323,8 @@ int main(int argc, char **argv)
 ////        printf("Mag Y    -> %4d ", imu.mag_y);
 ////        printf("Mag Z    -> %4d ", imu.mag_z);
 ////        printf("\n");
-        usleep(50000);
+//        usleep(50000);
+//        usleep(1000);
 //
     }
 
@@ -412,6 +444,47 @@ void programa_sobe_lentamente(){
         printf("Aux1      -> %4d\t", ctrl.aux1);
         printf("\n");
     }
+    
+    
+    send.throttle = 1450;
+    send.roll = NOMINAL;
+    send.pitch = NOMINAL;
+    send.yaw = NOMINAL;
+    send.aux1 = MAX;
+    send.aux2 = NOMINAL;
+    send.aux3 = NOMINAL;
+    send.aux4 = NOMINAL;
+    
+    
+    while (t_now.tv_sec - t_inicio.tv_sec < TIME_SOBE_LENTAMENTE + 4) {
+        printf("%ld\n", t_now.tv_sec - t_inicio.tv_sec);
+        multiwii_set_control(send);
+        gettimeofday(&t_now, NULL);
+        
+        usleep(100000);
+        control_t ctrl =
+        multiwii_get_control();
+        
+        printf("Throttle -> %4d\t", ctrl.throttle);
+        printf("Pitch    -> %4d\t", ctrl.pitch);
+        printf("Roll     -> %4d\t", ctrl.roll);
+        printf("Yaw      -> %4d\t", ctrl.yaw);
+        printf("Aux1      -> %4d\t", ctrl.aux1);
+        printf("\n");
+    }
     disarm();
 }
 
+
+
+/* this function is run by the second thread */
+void *multiwii_writer(void *args)
+{
+    control_t *send = (control_t *) args;
+    
+    while (true) {
+        multiwii_set_control(*send);
+    }
+    return NULL;
+    
+}

@@ -253,6 +253,7 @@
 				151088D91BA2009D0071AF52 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
