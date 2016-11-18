@@ -35,14 +35,19 @@
 
 #include <pthread.h>
 
-void arm();
-void disarm();
+
 void programa_sobe_lentamente();
+void *multiwii_writer(void *args);
+void *monitor_abort(void *args);
 
 
 int sockfd;
 int newsockfd;
 int port;
+
+
+pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t should_die = PTHREAD_MUTEX_INITIALIZER;
 
 int init_socket(int argc, char *argv[])
 {
@@ -80,59 +85,32 @@ int init_socket(int argc, char *argv[])
 
 
 
-void set_mode(int want_key)
-{
-    static struct termios old, new_;
-    if (!want_key)
-    {
-        tcsetattr(STDIN_FILENO, TCSANOW, &old);
-        return;
-    }
 
-    tcgetattr(STDIN_FILENO, &old);
-    new_ = old;
-    new_.c_lflag &= ~(ICANON | ECHO);
-    tcsetattr(STDIN_FILENO, TCSANOW, &new_);
-}
 
-char get_key()
-{
-//    int c = 0;
-//    struct timeval tv;
-//    fd_set fs;
-//    tv.tv_usec = tv.tv_sec = 0;
-//
-//    FD_ZERO(&fs);
-//    FD_SET(STDIN_FILENO, &fs);
-//    select(STDIN_FILENO + 1, &fs, 0, 0, &tv);
-//
-//    if (FD_ISSET(STDIN_FILENO, &fs))
-//    {
-//        c = getchar();
-//        set_mode(0);
-//    }
-//    return c;
-
-    int charsToRead = 0;
-
-    ioctl(newsockfd, FIONREAD, &charsToRead);
-
-    if(charsToRead == 0)
-        return '\0';
-
-    char ret;
-    int n;
-
-    n = (int)recv(newsockfd,&ret,1,0);
+float read_float(){
     
-    printf("%d\n", ret);
-    if (n < 0)
+    float ret;
+    int n;
+    
+    //    int charsToRead = 0;
+    
+    //    while (charsToRead < sizeof(int)) {
+    //        ioctl(newsockfd, FIONREAD, &charsToRead);
+    //    }
+    
+    
+    n = (int)recv(newsockfd,&ret,sizeof(ret),0);
+    
+    
+    
+    if (n <= 0)
     {
         printf("Erro lendo do socket!\n");
         exit(1);
     }
     return ret;
-
+    
+    
 }
 
 
@@ -141,17 +119,18 @@ int read_int(){
     int ret;
     int n;
     
-    int charsToRead = 0;
+//    int charsToRead = 0;
     
-    while (charsToRead < sizeof(int)) {
-        ioctl(newsockfd, FIONREAD, &charsToRead);
-    }
+//    while (charsToRead < sizeof(int)) {
+//        ioctl(newsockfd, FIONREAD, &charsToRead);
+//    }
+    
     
     n = (int)recv(newsockfd,&ret,sizeof(ret),0);
     
-    printf("%d\n", ret);
+
     
-    if (n < 0)
+    if (n <= 0)
     {
         printf("Erro lendo do socket!\n");
         exit(1);
@@ -176,7 +155,7 @@ void closeEverything(int signal)
     send.aux4 = 1500;
 
     
-    for(int i = 0; i < 15 ; i++){
+    for(int i = 0; i < 100 ; i++){
         multiwii_set_control(send);
     }
 
@@ -188,17 +167,20 @@ void closeEverything(int signal)
 
 }
 
+
+
+
 int main(int argc, char **argv)
 {
 
     
-//    if(argc < 2 )
-//    {
-//        printf("Uso ./leitor numero_porta\n");
-//        exit(1);
-//    }
+    if(argc < 2 )
+    {
+        printf("Uso ./leitor arquivo_entrada\n");
+        exit(1);
+    }
 //    port = atoi(argv[1]);
-    port = 5000;
+
 
     printf("\n -----------------------------------------------------\n\n");
     printf("\nPrograma para controle de quadcoptero Multiwii por porta Serial");
@@ -207,126 +189,97 @@ int main(int argc, char **argv)
 
     signal(SIGINT, closeEverything);
 
-    //set_mode(1);
-    init_socket(argc, argv);
+    
+    FILE *arquivo_entrada = fopen(argv[1], "r");
+    
+    if(arquivo_entrada == NULL){
+        printf("Arquivo %s nao encontrodo\n", argv[1]);
+        exit(1);
+    }
+    else{
+        printf("Lendo %s\n", argv[1]);
+        
+    }
+
+//    init_socket(argc, argv);
+    
     /********************/
-    multiwii_init_manipulation();
+//    multiwii_init_manipulation();
     /********************/
     
 
 
-
-    int throttle = 1500;
-    int pitch = 1500;
-    int roll = 1500;
-    int yaw = 1500;
-    int aux1 = NOMINAL;
-
-    control_t send;
+    control_t send, send2;
     send.throttle = 1500;
     send.pitch = 1500;
     send.roll = 1500;
     send.yaw = 1500;
     send.aux1 = 1500;
     send.aux2 = 1500;
-    send.aux3 = 1500;
+    send.aux3 = 2000;
     send.aux4 = 1500;
+    
+    send2 = send;
+    
+    pthread_t thread, thread2;
+//    
+//    pthread_create(&thread, NULL, multiwii_writer, &send2);
+//    pthread_create(&thread2, NULL, monitor_abort, &send2);
+//    
 
-    while(1)
-    {
-//        set_mode(1);
-//        char c = get_key();
-//
-//        switch(c)
-//        {
-//            case 'o':
-//            if(throttle < MAX_THROTTLE) throttle += 50;
-//            break;
-//            case 'l':
-//            if(throttle > MIN) throttle -= 50;
-//            break;
-//            case 'w':
-//            if(pitch < MAX) pitch += 50;
-//            break;
-//            case 's':
-//            if(pitch > MIN) pitch -= 50;
-//            break;
-//            case 'd':
-//            if(yaw < MAX) yaw += 50;
-//            break;
-//            case 'a':
-//            if(yaw > MIN) yaw -= 50;
-//            break;
-//            case 'e':
-//            if(roll < MAX) roll += 50;
-//            break;
-//            case 'q':
-//            if(roll > MIN) roll -= 50;
-//            break;
-//            case 'b': if(aux1 == NOMINAL) aux1 = MAX;
-//            else  aux1 = NOMINAL;
-//                break;
-//                
-//
-//        }
-
-
+//    while(1)
+//    {
+    
+        int number_of_iterations;// = read_int();
         
-        send.pitch = read_int();
-        send.roll = read_int();
-        send.yaw = read_int();
-        send.throttle = read_int();
-        send.aux1 = read_int();
-        send.aux2 = read_int();
-        send.aux3 = read_int();
-        send.aux4 = read_int();
+        fscanf(arquivo_entrada, "%d\n", &number_of_iterations);
+        printf("Programa: ");
+    
+        printf("%d iterações\n", number_of_iterations);
+        
+        int target_throttle[number_of_iterations];
+        int number_of_reps[number_of_iterations];
+        float reps_duration[number_of_iterations];
+        
+        for (int i = 0 ; i < number_of_iterations ; i++){
+            
+            fscanf(arquivo_entrada, "%d %d %f", target_throttle + i, number_of_reps + i, reps_duration + i);
+//            target_throttle[i] = read_int();
+//            number_of_reps[i] = read_int();
+//            reps_duration[i] = read_float();
+            
+            printf("%d, %d, %f\n",target_throttle[i], number_of_reps[i], reps_duration[i]);
+        }
+        
+        send.aux1 = 2000;
         
         
-//        
-//        send.throttle = throttle;
-//        send.roll = roll;
-//        send.pitch = pitch;
-//        send.yaw = yaw;
-//        send.aux1 = aux1;
-//        send.aux2 = MAX;
-//        send.aux3 = 1500;
-//        send.aux4 = 1500;
-//        
-        multiwii_set_control(send);
-//
-//        control_t ctrl =
-//        multiwii_get_control();
-//
-//        printf("Throttle -> %4d\t", ctrl.throttle);
-//        printf("Pitch    -> %4d\t", ctrl.pitch);
-//        printf("Roll     -> %4d\t", ctrl.roll);
-//        printf("Yaw      -> %4d\t", ctrl.yaw);
-//        printf("Aux1      -> %4d\t", ctrl.aux1);
-//        printf("\n");
-//
-//
-//        printf("Throttle -> %4d\t", send.throttle);
-//        printf("Pitch    -> %4d\t", send.pitch);
-//        printf("Roll     -> %4d\t", send.roll);
-//        printf("Yaw      -> %4d\t", send.yaw);
-//        printf("\n");
-//
-////        imu_t imu = multiwii_get_imu();
-////
-////        printf("Acc X    -> %4d ", imu.acc_x);
-////        printf("Acc y    -> %4d ", imu.acc_y);
-////        printf("Acc z    -> %4d ", imu.acc_z);
-////        printf("Gyr X    -> %4d ", imu.gyro_x);
-////        printf("Gyr Y    -> %4d ", imu.gyro_y);
-////        printf("Gyr Z    -> %4d ", imu.gyro_z);
-////        printf("Mag X    -> %4d ", imu.mag_x);
-////        printf("Mag Y    -> %4d ", imu.mag_y);
-////        printf("Mag Z    -> %4d ", imu.mag_z);
-////        printf("\n");
-//        usleep(50000);
-//        usleep(1000);
-//
-    }
+        
+        for(int i = 0 ; i < number_of_iterations ; i++){
+            float delta_throttle = (target_throttle[i] - send.throttle)/((float)number_of_reps[i]);
+            printf("Iteracao %d\n", i);
+            for(int j = 0 ; j < number_of_reps[i] ; j++){
+                
+                send.throttle = (int) (send.throttle + delta_throttle);
+                pthread_mutex_lock(&mutex);
+                send2 = send;
+                pthread_mutex_unlock(&mutex);
+                printf("\tRep: %d\n", j);
+                usleep(1000000 * reps_duration[i]);
+                
+            }
+            
+        }
+        
+        
+        send.throttle = 1000;
+        send.aux1 = 1500;
+        pthread_mutex_lock(&mutex);
+        send2 = send;
+        pthread_mutex_unlock(&mutex);
+        printf("Desligando\n");
+        usleep(1000000);
+//    }
 
     multiwii_stop_manipulation();
 
@@ -334,157 +287,69 @@ int main(int argc, char **argv)
 }
 
 
-void arm(){
-    
-    printf("arming\n");
-    
-    control_t send;
-
-    send.throttle = MIN;
-    send.roll = NOMINAL;
-    send.pitch = NOMINAL;
-    send.yaw = NOMINAL;
-    send.aux1 = MAX;
-    send.aux2 = NOMINAL;
-    send.aux3 = NOMINAL;
-    send.aux4 = NOMINAL;
-    
-
-    timeval t;
-    timeval current_val;
-    gettimeofday(&t, NULL);
-    unsigned int start = t.tv_usec/1000;
-    
-    
-    gettimeofday(&current_val, NULL);
-    unsigned int end = current_val.tv_usec/1000;
-
-    
-    while (end-start < 1) {
-        multiwii_set_control(send);
-        gettimeofday(&current_val, NULL);
-        end = current_val.tv_usec/1000;
-        usleep(100000);
-    }
-}
-
-void disarm(){
-    
-    control_t send;
-    
-    send.throttle = MIN;
-    send.roll = NOMINAL;
-    send.pitch = NOMINAL;
-    send.yaw = NOMINAL;
-    send.aux1 = NOMINAL;
-    send.aux2 = NOMINAL;
-    send.aux3 = NOMINAL;
-    send.aux4 = NOMINAL;
-    
-    
-    timeval t;
-    timeval current_val;
-    gettimeofday(&t, NULL);
-    unsigned int start = t.tv_usec/1000;
-    
-    
-    gettimeofday(&current_val, NULL);
-    unsigned int end = current_val.tv_usec/1000;
-    
-
-    multiwii_set_control(send);
-
-    
-    
-    while (end-start < 10) {
-
-        multiwii_set_control(send);
-        
-        gettimeofday(&current_val, NULL);
-        end = current_val.tv_usec/1000;
-    }
-    
-}
-
-void programa_sobe_lentamente(){
-
-    arm();
-    
-    timeval t_inicio;
-    gettimeofday(&t_inicio, NULL);
-    timeval t_now;
-    gettimeofday(&t_now, NULL);
-    
-    
-    control_t send;
-    
-    send.throttle = 1550;
-    send.roll = NOMINAL;
-    send.pitch = NOMINAL;
-    send.yaw = NOMINAL;
-    send.aux1 = MAX;
-    send.aux2 = NOMINAL;
-    send.aux3 = NOMINAL;
-    send.aux4 = NOMINAL;
-
-    
-    while (t_now.tv_sec - t_inicio.tv_sec < TIME_SOBE_LENTAMENTE) {
-        printf("%ld\n", t_now.tv_sec - t_inicio.tv_sec);
-        multiwii_set_control(send);
-        gettimeofday(&t_now, NULL);
-        
-        usleep(100000);
-        control_t ctrl =
-        multiwii_get_control();
-        
-        printf("Throttle -> %4d\t", ctrl.throttle);
-        printf("Pitch    -> %4d\t", ctrl.pitch);
-        printf("Roll     -> %4d\t", ctrl.roll);
-        printf("Yaw      -> %4d\t", ctrl.yaw);
-        printf("Aux1      -> %4d\t", ctrl.aux1);
-        printf("\n");
-    }
-    
-    
-    send.throttle = 1450;
-    send.roll = NOMINAL;
-    send.pitch = NOMINAL;
-    send.yaw = NOMINAL;
-    send.aux1 = MAX;
-    send.aux2 = NOMINAL;
-    send.aux3 = NOMINAL;
-    send.aux4 = NOMINAL;
-    
-    
-    while (t_now.tv_sec - t_inicio.tv_sec < TIME_SOBE_LENTAMENTE + 4) {
-        printf("%ld\n", t_now.tv_sec - t_inicio.tv_sec);
-        multiwii_set_control(send);
-        gettimeofday(&t_now, NULL);
-        
-        usleep(100000);
-        control_t ctrl =
-        multiwii_get_control();
-        
-        printf("Throttle -> %4d\t", ctrl.throttle);
-        printf("Pitch    -> %4d\t", ctrl.pitch);
-        printf("Roll     -> %4d\t", ctrl.roll);
-        printf("Yaw      -> %4d\t", ctrl.yaw);
-        printf("Aux1      -> %4d\t", ctrl.aux1);
-        printf("\n");
-    }
-    disarm();
-}
-
-
-
 /* this function is run by the second thread */
 void *multiwii_writer(void *args)
 {
     control_t *send = (control_t *) args;
+    control_t send2;
     
     while (true) {
-        multiwii_set_control(*send);
+        
+        pthread_mutex_lock(&mutex);
+        send2 = *send;
+        pthread_mutex_unlock(&mutex);
+        
+        
+        pthread_mutex_lock(&should_die);
+        multiwii_set_control(send2);
+        pthread_mutex_unlock(&should_die);
+        usleep(2800);
+        
+        
+        
+//        control_t ctrl =
+//        multiwii_get_control();
+//        printf("Throttle -> %4d\t", ctrl.throttle);
+//        printf("Pitch    -> %4d\t", ctrl.pitch);
+//        printf("Roll     -> %4d\t", ctrl.roll);
+//        printf("Yaw      -> %4d\t", ctrl.yaw);
+//        printf("Aux1      -> %4d\t", ctrl.aux1);
+//        printf("\n");
+        
     }
     return NULL;
+}
+
+
+/* this function is run by the second thread */
+void *monitor_keyboard(void *args)
+{
     
+    port = 5050;
+    
+    init_socket(0, 0);
+    printf("I died\n");
+    //Termina ultimas escritas, adquire o lock e nao solta mais;
+    pthread_mutex_lock(&should_die);
+    
+    closeEverything(0);
+    
+    return NULL;
+}
+
+
+/* this function is run by the second thread */
+void *monitor_abort(void *args)
+{
+  
+    port = 5050;
+    
+    init_socket(0, 0);
+    printf("I died\n");
+    //Termina ultimas escritas, adquire o lock e nao solta mais;
+    pthread_mutex_lock(&should_die);
+    
+    closeEverything(0);
+    
+    return NULL;
 }

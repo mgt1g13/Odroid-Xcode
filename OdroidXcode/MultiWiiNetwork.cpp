@@ -83,8 +83,8 @@ void initPort()
     options.c_cflag |= CS8;
     
     
-    options.c_cc[VTIME] = 0.1;  // timeout after .1s that isn't working
-    options.c_cc[VMIN] = 1;
+    options.c_cc[VTIME] = 1;  // timeout after .1s that isn't working
+    options.c_cc[VMIN] = 0;
     
     
     /*

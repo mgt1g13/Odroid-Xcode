@@ -26,6 +26,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		150B35B11DCBFFE0004BC3A4 /* AutoPilot.route */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = AutoPilot.route; sourceTree = "<group>"; };
 		151088D01BA2009D0071AF52 /* OdroidXcode */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = OdroidXcode; sourceTree = BUILT_PRODUCTS_DIR; };
 		151088D31BA2009D0071AF52 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		151088DA1BA200E20071AF52 /* MultiWiiManipulation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = MultiWiiManipulation.cpp; sourceTree = "<group>"; };
@@ -73,6 +74,7 @@
 				151088DE1BA200E20071AF52 /* MultiWiiProtocol.cpp */,
 				151088DF1BA200E20071AF52 /* MultiWiiProtocol.h */,
 				151088D31BA2009D0071AF52 /* main.cpp */,
+				150B35B11DCBFFE0004BC3A4 /* AutoPilot.route */,
 			);
 			path = OdroidXcode;
 			sourceTree = "<group>";

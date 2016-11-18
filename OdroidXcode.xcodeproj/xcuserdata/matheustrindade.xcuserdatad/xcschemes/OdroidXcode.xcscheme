@@ -61,6 +61,12 @@
             ReferencedContainer = "container:OdroidXcode.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "/Users/matheustrindade/Documents/UFSM/Trabalhos/IC-dset/OdroidXcode/OdroidXcode/AutoPilot.route"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
       <AdditionalOptions>
       </AdditionalOptions>
    </LaunchAction>
